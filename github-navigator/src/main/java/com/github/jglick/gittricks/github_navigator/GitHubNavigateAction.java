@@ -26,10 +26,23 @@ package com.github.jglick.gittricks.github_navigator;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.swing.text.StyledDocument;
+import org.netbeans.api.annotations.common.CheckForNull;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
+import org.openide.awt.HtmlBrowser;
+import org.openide.awt.StatusDisplayer;
 import org.openide.cookies.EditorCookie;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
+import org.openide.loaders.DataObject;
+import org.openide.text.NbDocument;
+import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 
 @ActionID(category="Git", id="com.github.jglick.gittricks.github_navigator.GitHubNavigateAction")
@@ -45,8 +58,75 @@ public final class GitHubNavigateAction implements ActionListener {
     }
 
     @Override public void actionPerformed(ActionEvent ev) {
-        // TODO find ancestor .git, check for config#remote.origin matching github.com, setEnabled(true)
-        // TODO ask context for line number, look up file, check .git/HEAD, look up refs/heads/*, browse to that commit
+        int line = NbDocument.findLineNumber(context.getDocument(), context.getOpenedPanes()[0].getCaretPosition()) + 1;
+        FileObject f = ((DataObject) context.getDocument().getProperty(StyledDocument.StreamDescriptionProperty)).getPrimaryFile(); // TODO is there no helper method for this?
+        URL u;
+        try {
+            u = urlOf(f, line);
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+            return;
+        }
+        if (u == null) {
+            StatusDisplayer.getDefault().setStatusText("Cannot find " + FileUtil.getFileDisplayName(f) + " on GitHub.");
+            return;
+        }
+        HtmlBrowser.URLDisplayer.getDefault().showURLExternal(u);
     }
+
+    static @CheckForNull URL urlOf(FileObject f, int line) throws IOException {
+        FileObject d = f.getParent();
+        return urlOf(d, f.getNameExt(), line);
+    }
+    private static URL urlOf(FileObject d, String path, int line) throws IOException {
+        FileObject git = d.getFileObject(".git");
+        if (git == null) {
+            FileObject d2 = d.getParent();
+            if (d2 == null) {
+                return null;
+            } else {
+                return urlOf(d2, d.getNameExt() + "/" + path, line);
+            }
+        }
+        FileObject config = git.getFileObject("config");
+        if (config == null) {
+            return null;
+        }
+        String ownerRepo = null;
+        for (String l : config.asLines()) {
+            Matcher m = GITHUB_URL.matcher(l);
+            if (m.matches()) {
+                ownerRepo = m.group(1);
+                break;
+            }
+        }
+        if (ownerRepo == null) {
+            return null;
+        }
+        FileObject head = git.getFileObject("HEAD");
+        if (head == null) {
+            return null;
+        }
+        String ref = null;
+        for (String l : head.asLines()) {
+            Matcher m = REF.matcher(l);
+            if (m.matches()) {
+                ref = m.group(1);
+                break;
+            }
+        }
+        if (ref == null) {
+            return null;
+        }
+        FileObject refF = git.getFileObject(ref);
+        if (refF == null) {
+            return null;
+        }
+        String commit = refF.asText().trim();
+        return new URL("https://github.com/" + ownerRepo + "/blob/" + commit + "/" + path + "#L" + line);
+    }
+
+    private static final Pattern GITHUB_URL = Pattern.compile("\\s*url\\s*=\\s*git@github[.]com:([^/]+/[^/]+)[.]git\\s*");
+    private static final Pattern REF = Pattern.compile("ref: (.+)");
 
 }
