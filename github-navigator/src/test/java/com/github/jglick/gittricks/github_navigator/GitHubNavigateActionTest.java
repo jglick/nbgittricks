@@ -59,12 +59,13 @@ public class GitHubNavigateActionTest {
             pw.flush();
         }
         FileObject f = r.createFolder("src").createFolder("stuff").createData("File.txt");
-        assertEquals(new URL("https://github.com/owner/repo/blob/abc123/src/stuff/File.txt#L12"), GitHubNavigateAction.urlOf(f, 12));
+        assertEquals(new URL("https://github.com/owner/repo/blob/abc123/src/stuff/File.txt#L12"), GitHubNavigateAction.urlOf(f, 12, 12));
+        assertEquals(new URL("https://github.com/owner/repo/blob/abc123/src/stuff/File.txt#L12-14"), GitHubNavigateAction.urlOf(f, 12, 14));
     }
 
     @Test public void noGit() throws Exception {
          FileObject r = FileUtil.toFileObject(tmp.getRoot());
-         assertNull(GitHubNavigateAction.urlOf(r.createData("f"), 1));
+         assertNull(GitHubNavigateAction.urlOf(r.createData("f"), 1, 1));
    }
 
 }

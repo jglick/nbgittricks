@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JEditorPane;
 import javax.swing.text.StyledDocument;
 import org.netbeans.api.annotations.common.CheckForNull;
 import org.openide.awt.ActionID;
@@ -58,11 +59,16 @@ public final class GitHubNavigateAction implements ActionListener {
     }
 
     @Override public void actionPerformed(ActionEvent ev) {
-        int line = NbDocument.findLineNumber(context.getDocument(), context.getOpenedPanes()[0].getCaretPosition()) + 1;
-        FileObject f = ((DataObject) context.getDocument().getProperty(StyledDocument.StreamDescriptionProperty)).getPrimaryFile(); // TODO is there no helper method for this?
+        JEditorPane pane = context.getOpenedPanes()[0];
+        int selStart = pane.getSelectionStart();
+        int selEnd = pane.getSelectionEnd();
+        StyledDocument doc = context.getDocument();
+        int startLine = NbDocument.findLineNumber(doc, Math.min(selStart, selEnd)) + 1;
+        int endLine = Math.max(startLine, NbDocument.findLineNumber(doc, Math.max(selStart, selEnd)) + (NbDocument.findLineColumn(doc, Math.max(selStart, selEnd)) == 0 ? 0 : 1));
+        FileObject f = ((DataObject) doc.getProperty(StyledDocument.StreamDescriptionProperty)).getPrimaryFile(); // TODO is there no helper method for this?
         URL u;
         try {
-            u = urlOf(f, line);
+            u = urlOf(f, startLine, endLine);
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
             return;
@@ -74,18 +80,18 @@ public final class GitHubNavigateAction implements ActionListener {
         HtmlBrowser.URLDisplayer.getDefault().showURLExternal(u);
     }
 
-    static @CheckForNull URL urlOf(FileObject f, int line) throws IOException {
+    static @CheckForNull URL urlOf(FileObject f, int startLine, int endLine) throws IOException {
         FileObject d = f.getParent();
-        return urlOf(d, f.getNameExt(), line);
+        return urlOf(d, f.getNameExt(), startLine, endLine);
     }
-    private static URL urlOf(FileObject d, String path, int line) throws IOException {
+    private static URL urlOf(FileObject d, String path, int startLine, int endLine) throws IOException {
         FileObject git = d.getFileObject(".git");
         if (git == null) {
             FileObject d2 = d.getParent();
             if (d2 == null) {
                 return null;
             } else {
-                return urlOf(d2, d.getNameExt() + "/" + path, line);
+                return urlOf(d2, d.getNameExt() + "/" + path, startLine, endLine);
             }
         }
         FileObject config = git.getFileObject("config");
@@ -123,7 +129,7 @@ public final class GitHubNavigateAction implements ActionListener {
             return null;
         }
         String commit = refF.asText().trim();
-        return new URL("https://github.com/" + ownerRepo + "/blob/" + commit + "/" + path + "#L" + line);
+        return new URL("https://github.com/" + ownerRepo + "/blob/" + commit + "/" + path + "#L" + (startLine == endLine ? startLine : startLine + "-" + endLine));
     }
 
     private static final Pattern GITHUB_URL = Pattern.compile("\\s*url\\s*=\\s*git@github[.]com:([^/]+/[^/]+)[.]git\\s*");
