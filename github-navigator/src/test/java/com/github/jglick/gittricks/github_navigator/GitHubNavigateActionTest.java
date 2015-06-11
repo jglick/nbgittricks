@@ -66,6 +66,10 @@ public class GitHubNavigateActionTest {
     @Test public void noGit() throws Exception {
          FileObject r = FileUtil.toFileObject(tmp.getRoot());
          assertNull(GitHubNavigateAction.urlOf(r.createData("f"), 1, 1));
-   }
+    }
+
+    @Test public void ownerRepo() {
+        assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("git@github.com:owner/repo.git"));
+    }
 
 }

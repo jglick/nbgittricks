@@ -100,9 +100,9 @@ public final class GitHubNavigateAction implements ActionListener {
         }
         String ownerRepo = null;
         for (String l : config.asLines()) {
-            Matcher m = GITHUB_URL.matcher(l);
+            Matcher m = GIT_CONFIG_URL.matcher(l);
             if (m.matches()) {
-                ownerRepo = m.group(1);
+                ownerRepo = ownerRepo(m.group(1));
                 break;
             }
         }
@@ -132,7 +132,17 @@ public final class GitHubNavigateAction implements ActionListener {
         return new URL("https://github.com/" + ownerRepo + "/blob/" + commit + "/" + path + "#L" + (startLine == endLine ? startLine : startLine + "-" + endLine));
     }
 
-    private static final Pattern GITHUB_URL = Pattern.compile("\\s*url\\s*=\\s*git@github[.]com:([^/]+/[^/]+)[.]git\\s*");
+    static @CheckForNull String ownerRepo(String url) {
+        Matcher m = GITHUB_URL.matcher(url);
+        if (m.matches()) {
+            return m.group(1);
+        } else {
+            return null;
+        }
+    }
+
+    private static final Pattern GIT_CONFIG_URL = Pattern.compile("\\s*url\\s*=\\s*(.+)\\s*");
+    private static final Pattern GITHUB_URL = Pattern.compile("git@github[.]com:([^/]+/[^/]+)[.]git");
     private static final Pattern REF = Pattern.compile("ref: (.+)");
 
 }
