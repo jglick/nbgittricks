@@ -133,16 +133,20 @@ public final class GitHubNavigateAction implements ActionListener {
     }
 
     static @CheckForNull String ownerRepo(String url) {
-        Matcher m = GITHUB_URL.matcher(url);
-        if (m.matches()) {
-            return m.group(1);
-        } else {
-            return null;
+        for (Pattern p : GITHUB_URLS) {
+            Matcher m = p.matcher(url);
+            if (m.matches()) {
+                return m.group(1);
+            }
         }
+        return null;
     }
 
     private static final Pattern GIT_CONFIG_URL = Pattern.compile("\\s*url\\s*=\\s*(.+)\\s*");
-    private static final Pattern GITHUB_URL = Pattern.compile("git@github[.]com:([^/]+/[^/]+)[.]git");
+    private static final Pattern[] GITHUB_URLS = {
+        Pattern.compile("(?:git@github[.]com:|ssh://git@github[.]com/)([^/]+/[^/]+?)([.]git)?"),
+        Pattern.compile("https://github.com/([^/]+/[^/]+?)([.]git|/|)"),
+    };
     private static final Pattern REF = Pattern.compile("ref: (.+)");
 
 }
