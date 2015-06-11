@@ -146,6 +146,7 @@ public final class GitHubNavigateAction implements ActionListener {
     private static final Pattern[] GITHUB_URLS = {
         Pattern.compile("(?:git@github[.]com:|ssh://git@github[.]com/)([^/]+/[^/]+?)([.]git)?"),
         Pattern.compile("https://github.com/([^/]+/[^/]+?)([.]git|/|)"),
+        Pattern.compile("git://github.com/([^/]+/[^/]+?)([.]git|/|)"),
     };
     private static final Pattern REF = Pattern.compile("ref: (.+)");
 

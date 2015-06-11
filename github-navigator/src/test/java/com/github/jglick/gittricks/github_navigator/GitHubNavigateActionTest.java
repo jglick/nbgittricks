@@ -75,11 +75,15 @@ public class GitHubNavigateActionTest {
         assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("https://github.com/owner/repo.git"));
         // The expanded form of the SSH URL:
         assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("ssh://git@github.com/owner/repo.git"));
+        // Deliberately read-only version (useful for preventing accidental pushes):
+        assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("git://github.com/owner/repo.git"));
         // Some other forms that are accepted:
         assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("git@github.com:owner/repo"));
         assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("ssh://git@github.com/owner/repo"));
         assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("https://github.com/owner/repo/"));
         assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("https://github.com/owner/repo"));
+        assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("git://github.com/owner/repo/"));
+        assertEquals("owner/repo", GitHubNavigateAction.ownerRepo("git://github.com/owner/repo"));
         // Dots are allowed in the repo name:
         assertEquals("owner/one.two", GitHubNavigateAction.ownerRepo("git@github.com:owner/one.two.git"));
         assertEquals("owner/one.two", GitHubNavigateAction.ownerRepo("https://github.com/owner/one.two.git"));
