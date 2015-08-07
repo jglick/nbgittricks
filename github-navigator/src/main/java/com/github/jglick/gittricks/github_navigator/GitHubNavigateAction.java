@@ -129,7 +129,7 @@ public final class GitHubNavigateAction implements ActionListener {
             return null;
         }
         String commit = refF.asText().trim();
-        return new URL("https://github.com/" + ownerRepo + "/blob/" + commit + "/" + path + "#L" + (startLine == endLine ? startLine : startLine + "-" + endLine));
+        return new URL("https://github.com/" + ownerRepo + "/blob/" + commit + "/" + path + "#L" + (startLine == endLine ? startLine : startLine + "-L" + endLine));
     }
 
     static @CheckForNull String ownerRepo(String url) {
