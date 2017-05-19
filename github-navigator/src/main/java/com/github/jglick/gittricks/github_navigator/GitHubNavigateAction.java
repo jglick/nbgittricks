@@ -59,6 +59,11 @@ public final class GitHubNavigateAction implements ActionListener {
     }
 
     @Override public void actionPerformed(ActionEvent ev) {
+        if (context == null) {
+            // TODO allow context to be a DataObject instead
+            StatusDisplayer.getDefault().setStatusText("Open file in editor to use.");
+            return;
+        }
         JEditorPane pane = context.getOpenedPanes()[0];
         int selStart = pane.getSelectionStart();
         int selEnd = pane.getSelectionEnd();
