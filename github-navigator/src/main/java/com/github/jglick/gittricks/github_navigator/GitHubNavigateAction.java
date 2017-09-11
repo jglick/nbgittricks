@@ -105,6 +105,7 @@ public final class GitHubNavigateAction implements ActionListener {
         }
         String ownerRepo = null;
         for (String l : config.asLines()) {
+            // TODO interpret aliases as in https://twitter.com/kisielk/status/793133952542191616, or just run: `git remote -v`
             Matcher m = GIT_CONFIG_URL.matcher(l);
             if (m.matches()) {
                 ownerRepo = ownerRepo(m.group(1));
